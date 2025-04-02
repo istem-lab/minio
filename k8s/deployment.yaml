@@ -2,22 +2,47 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minio
+  namespace: minio
+  labels:
+    app: minio
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
   template:
+    metadata:
+      labels:
+        app: minio
     spec:
       containers:
-        - name: minio
-          image: minio/minio:latest
-          args:
-            - server
-            - /data                         # data directory
-            - --address=:9000               # API on 9000
-            - --console-address=:9001       # Console on 9001 (ensure it's fixed)
-          env:
-            - name: MINIO_BROWSER_REDIRECT_URL
-              value: "http://minio.istem-lab.com/minio/" 
-            - name: MINIO_CONSOLE_SUBPATH
-              value: "/minio"
-          ports:
-            - containerPort: 9000
-            - containerPort: 9001
+      - name: minio
+        image: minio/minio:latest   # Using the latest image
+        args:
+          - "server"
+          - "/data"
+          - "--address=:9000"        # Bind S3 API to port 9000
+          - "--console-address=:9001" # Bind Console UI to port 9001
+        env:
+        - name: MINIO_ROOT_USER
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: accesskey
+        - name: MINIO_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: secretkey
+        - name: MINIO_BROWSER_REDIRECT_URL
+          value: "http://minio.istem-lab.com/minio"  # External URL for console redirect
+        - name: MINIO_CONSOLE_SUBPATH
+          value: "/minio"                             # Console served under this subpath
+        ports:
+        - name: api
+          containerPort: 9000
+        - name: console
+          containerPort: 9001
+        volumeMounts:
+        - name: minio-data
+          mountPath: /data
