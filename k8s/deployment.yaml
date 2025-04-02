@@ -3,12 +3,13 @@ kind: Deployment
 metadata:
   name: minio
   namespace: minio
+  labels:
+    app: minio
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: minio
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -18,46 +19,19 @@ spec:
       - name: minio
         image: minio/minio:latest
         args:
-        - server
-        - /data
+          - "server"
+          - "/data"
         env:
-        - name: MINIO_ROOT_USER
-          valueFrom:
-            secretKeyRef:
-              name: minio-credentials
-              key: rootUser
-        - name: MINIO_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: minio-credentials
-              key: rootPassword
+          - name: MINIO_ROOT_USER
+            value: "minioadmin"
+          - name: MINIO_ROOT_PASSWORD
+            value: "minioadmin"
         ports:
-        - containerPort: 9000
-          name: api
-        - containerPort: 9001
-          name: console
-        resources:
-          requests:
-            cpu: 100m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 1Gi
+          - containerPort: 9000  # S3 API endpoint
+          - containerPort: 9001  # Console endpoint
         volumeMounts:
-        - name: minio-data
-          mountPath: /data
-        readinessProbe:
-          httpGet:
-            path: /minio/health/ready
-            port: api
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /minio/health/live
-            port: api
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          - name: minio-data
+            mountPath: /data
       volumes:
       - name: minio-data
         persistentVolumeClaim:
