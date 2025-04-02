@@ -3,13 +3,12 @@ kind: Deployment
 metadata:
   name: minio
   namespace: minio
-  labels:
-    app: minio
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: minio
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -19,30 +18,47 @@ spec:
       - name: minio
         image: minio/minio:latest
         args:
-          - "server"
-          - "/data"
-          - "--address=:9000"
-          - "--console-address=:9001"
+        - server
+        - /data
         env:
         - name: MINIO_ROOT_USER
           valueFrom:
             secretKeyRef:
-              name: minio-secret
-              key: accesskey
+              name: minio-credentials
+              key: rootUser
         - name: MINIO_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: minio-secret
-              key: secretkey
-        - name: MINIO_BROWSER_REDIRECT_URL
-          value: "http://minio.istem-lab.com/minio"
-        - name: MINIO_CONSOLE_SUBPATH
-          value: "/minio"
+              name: minio-credentials
+              key: rootPassword
         ports:
-        - name: api
-          containerPort: 9000
-        - name: console
-          containerPort: 9001
+        - containerPort: 9000
+          name: api
+        - containerPort: 9001
+          name: console
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
         volumeMounts:
         - name: minio-data
           mountPath: /data
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: api
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: api
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: minio-data
+        persistentVolumeClaim:
+          claimName: minio-pvc
