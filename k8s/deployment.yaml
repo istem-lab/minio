@@ -20,16 +20,16 @@ spec:
         image: minio/minio:latest
         args:
           - "server"
+          - "--console-address"
+          - ":9001"
           - "/data"
         env:
           - name: MINIO_ROOT_USER
             value: "minioadmin"
           - name: MINIO_ROOT_PASSWORD
             value: "minioadmin"
-          - name: MINIO_BROWSER_PORT
-            value: "9001"   # Force the web console to use port 9001
         ports:
-          - containerPort: 9000  # S3 API endpoint
+          - containerPort: 9000  # API endpoint
           - containerPort: 9001  # Console endpoint
         volumeMounts:
           - name: minio-data
