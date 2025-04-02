@@ -4,9 +4,10 @@ metadata:
   name: minio
   namespace: minio
 spec:
+  type: ClusterIP
   selector:
     app: minio
   ports:
-  - port: 80         # External port (now standard HTTP)
-    targetPort: 9000 # Container port (MinIO listens on 9000)
+  - port: 80          # Port exposed to the Ingress
+    targetPort: 9000  # Port on which MinIO container listens
     protocol: TCP
