@@ -26,12 +26,21 @@ spec:
             value: "minioadmin"
           - name: MINIO_ROOT_PASSWORD
             value: "minioadmin"
+          - name: MINIO_BROWSER_PORT
+            value: "9001"   # Force the web console to use port 9001
         ports:
           - containerPort: 9000  # S3 API endpoint
           - containerPort: 9001  # Console endpoint
         volumeMounts:
           - name: minio-data
             mountPath: /data
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "1Gi"
+          limits:
+            cpu: "400m"
+            memory: "2Gi"
       volumes:
       - name: minio-data
         persistentVolumeClaim:
