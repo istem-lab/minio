@@ -28,6 +28,8 @@ spec:
             value: "minioadmin"
           - name: MINIO_ROOT_PASSWORD
             value: "minioadmin"
+          - name: MINIO_SERVER_URL
+            value: "https://api.minio.istem-lab.com"  # Tells the console where the S3 API is
         ports:
           - containerPort: 9000  # API endpoint
           - containerPort: 9001  # Console endpoint
